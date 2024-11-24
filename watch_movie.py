@@ -1,3 +1,4 @@
+import sys
 import time
 import requests
 import os
@@ -13,7 +14,7 @@ init(autoreset=True)
 
 head = {
     'referer': 'https://www.wannengji.net/',
-    'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36'
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36'
 }
 
 proxy_url = 'http://127.0.0.1:7890'
@@ -56,7 +57,7 @@ def chose(cc):
 def advanced_search(movie_name=None):
     try:
         if not movie_name:
-            movie_name = input(Fore.RED+'+高级搜索模式开启--(请再次输入电影名字):')
+            movie_name = input(Fore.RED + '+高级搜索模式开启--(请再次输入电影名字):')
         ag1_url = f'https://www.wannengji.net/search/{movie_name}-1'
         ag1_re = requests.get(ag1_url, proxies={'http': proxy_url}).text
         tree = etree.HTML(ag1_re)
@@ -85,16 +86,18 @@ def advanced_search(movie_name=None):
                 v = 'https:'
                 url = v + result.split(':')[1]
                 name = result.split(':')[2]
-                print(Fore.RED+f'[++]高级查询到!-- {url} {name}')
+                print(Fore.RED + f'[++]高级查询到!-- {url} {name}')
                 bf = input('选择[0]:远程下载到本地  [1]:提供在线观看地址：')
                 if bf == '0':
                     print(f'正在远程下载{name}中请稍等....')
                     asyncio.run(async_download(url))
-
+                    sys.exit()
                 elif bf == '1':
-                    print(f'可以此电影的在线播放地址{url}')
+                    print(f'可以此电影的在线播放地址  {url}  {name}')
+                    sys.exit()
                 else:
                     print('请输入正确的数字！！eg(0 or 1)')
+                    sys.exit()
     except Exception as e:
         print(e)
 
@@ -141,13 +144,21 @@ def merge_ts_files(name, n):
     path = os.path.join(path, path1)
 
     ts_files = [f'{i}.ts' for i in range(1, n)]
-    ts_max = " ".join(ts_files)
+    ts_max = " + ".join(ts_files)
 
     try:
-        os.system(f'cd {path} && cat {ts_max} > {name}.mp4')
-        print(Fore.RED + f'{name}--下载成功')
-        os.system(f'cd {path} && rm -rf *.ts')
-        print(Fore.RED + '*.ts--删除成功')
+        if bb == 'mac':
+            os.system(f'cd {path} && cat {ts_max} > {name}.mp4')
+            print(Fore.RED + f'{name}--下载成功')
+            os.system(f'cd {path} && rm -rf *.ts')
+            print(Fore.RED + '*.ts--删除成功')
+        elif bb == 'win':
+            os.system(f'cd {path} && copy /b {ts_max} {name}.mp4')
+            print(Fore.RED + f'{name}--下载成功')
+            os.system(f'cd {path} && del *.ts')
+            print(Fore.RED + '*.ts--删除成功')
+        else:
+            print('请输入正确的型号')
     except Exception as e:
         print(e)
 
@@ -183,6 +194,7 @@ async def main():
 
 if __name__ == '__main__':
     search_term = input('请输入你想要看的电影名称：')
+    bb = input('请输入你电脑的型号(win) or (mac):')
     start_time = time.time()
     search_in_file(search_term)
     if oss:
